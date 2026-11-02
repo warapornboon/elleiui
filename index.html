@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ใส่รหัสเปิดอ่านข้อความ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Sukhumvit Set', 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    body {
+      background-color: #0d1b2a;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .card {
+      background: #1b263b;
+      border: 1px solid #415a77;
+      border-radius: 20px;
+      padding: 30px 20px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      font-size: 14px;
+      color: #778da9;
+      margin-bottom: 25px;
+    }
+
+    .input-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .code-input {
+      width: 60px;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid #415a77;
+      border-radius: 12px;
+      font-size: 32px;
+      font-weight: bold;
+      color: #fff;
+      text-align: center;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .code-input:focus {
+      border-color: #64dfdf;
+      box-shadow: 0 0 10px rgba(100, 223, 223, 0.3);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background-color: #72efdd;
+      color: #0d1b2a;
+      border: none;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: #64dfdf;
+    }
+
+    /* หน้าแสดงข้อความลับ */
+    .secret-box {
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    .secret-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #e0e1dd;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .highlight {
+      color: #72efdd;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 18px;
+    }
+
+    .error-msg {
+      color: #ff6b6b;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <!-- หน้าใส่รหัส -->
+    <div id="lock-screen">
+      <div class="icon">🔐</div>
+      <h2>ใส่รหัส 2 หลักนะ</h2>
+      <p class="subtitle">พิมพ์ตัวเลขเพื่อเปิดอ่านข้อความ</p>
+      
+      <div class="input-container">
+        <input type="number" maxlength="1" class="code-input" id="digit1" pattern="[0-9]*" inputmode="numeric">
+        <input type="number" maxlength="1" class="code-input" id="digit2" pattern="[0-9]*" inputmode="numeric">
+      </div>
+
+      <button class="btn" onclick="checkCode()">เปิดอ่านเลย</button>
+      <div class="error-msg" id="error-msg">รหัสไม่ถูกต้อง ลองใหม่อีกทีนะ!</div>
+    </div>
+
+    <!-- หน้าแสดงข้อความซ่อน -->
+    <div id="secret-screen" class="secret-box">
+      <div class="icon">💙</div>
+      <div class="secret-text" id="message-content">
+        <!-- ข้อความจะมาแสดงตรงนี้ -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --------------------------------------------------
+    // กำหนดรหัสผ่าน และ ข้อความลับตรงนี้ครับ
+    // --------------------------------------------------
+    const SECRET_CODE = "16"; // เปลี่ยนรหัสผ่าน 2 หลักตรงนี้
+    
+    const SECRET_MESSAGES = {
+      "16": `คืองี้ใช่ไหม คือเมื่อวานก่อนอ่ะเค้าบ่นกับพ่อแม่ว่า เค้าอยากได้รถ และทีนี้พ่อแม่เค้าก็พูดว่า "เดี๋ยวพรุ่งนี้พาไปซื้อรถนะ" และทีนี้วันนี้เค้าก็มาซื้อรถจริงๆ มีหลายคันมาก เลือกไม่ถูกเลยแหละ แบบมันหลายคันจริงๆ แต่เค้ามีคันที่ชอบนะ คันถึงเธอทุกวิด<br><br><div class="highlight">"คิดถึงเธอทุกวัน" &gt;&lt; 💙</div>`
+    };
+
+    // ระบบพิมพ์แล้วเด้งไปช่องถัดไปอัตโนมัติ
+    const d1 = document.getElementById('digit1');
+    const d2 = document.getElementById('digit2');
+
+    d1.addEventListener('input', () => {
+      if (d1.value.length >= 1) {
+        d1.value = d1.value.slice(0, 1);
+        d2.focus();
+      }
+    });
+
+    d2.addEventListener('input', () => {
+      if (d2.value.length >= 1) {
+        d2.value = d2.value.slice(0, 1);
+      }
+    });
+
+    // ตรวจสอบรหัสผ่าน
+    function checkCode() {
+      const inputCode = d1.value + d2.value;
+      const errorMsg = document.getElementById('error-msg');
+      
+      if (inputCode === SECRET_CODE) {
+        document.getElementById('lock-screen').style.display = 'none';
+        document.getElementById('message-content').innerHTML = SECRET_MESSAGES[SECRET_CODE];
+        document.getElementById('secret-screen').style.display = 'block';
+      } else {
+        errorMsg.style.display = 'block';
+        d1.value = '';
+        d2.value = '';
+        d1.focus();
+      }
+    }
+  </script>
+</body>
+</html>
